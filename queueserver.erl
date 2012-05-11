@@ -31,13 +31,13 @@ handle_call(get_message, _, Queue) ->
     {reply, get(Queue), Queue}.
 
 handle_cast({post_message, Message}, Queue) when queue:is_empty(Queue) ->
-    {ok, TRef} = apply_interval(10000, queueserver, dequeue, []),
+    {ok, TRef} = timer:apply_interval(10000, queueserver, dequeue, []),
     put(timer, TRef),
     {noreply, in(Message, Queue)};
 handle_cast({post_message, Message}, Queue) ->
     {noreply, in(Message, Queue)};
 handle_cast(dequeue, Queue) when queue:is_empty(drop(Queue))->
-    cancel(get(timer)),
+    timer:cancel(get(timer)),
     {noreply, drop(Queue)};
 handle_cast(dequeue, Queue)->
     {noreply, drop(Queue)};
@@ -45,4 +45,4 @@ handle_cast(stop, Queue) ->
     {stop, "'stop' was cast", Queue}.
 
 terminate(_, _) ->
-    cancel(get(timer)).
+    timer:cancel(get(timer)).
