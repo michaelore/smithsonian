@@ -1,0 +1,6 @@
+<erl>
+
+out(_) ->
+       {content, "application/json", {struct, queueserver:get_message()}}.
+
+</erl>

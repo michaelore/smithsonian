@@ -1,0 +1,7 @@
+<erl>
+
+out(A) ->
+       Q = yaws_api:parse_post(A),
+       queueserver:post_message(lkup("message", Q)).
+
+</erl>
