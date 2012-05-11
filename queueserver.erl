@@ -25,22 +25,34 @@ init(_) ->
       [{servername, "smithsonianmini"}, {listen, {0,0,0,0}}]),
     {ok, queue:new()}.
 
-handle_call(get_message, _, Queue) when queue:is_empty(Queue) ->
-    {reply, "Default message", Queue};
 handle_call(get_message, _, Queue) ->
-    {reply, get(Queue), Queue}.
+    Empty = queue:is_empty(Queue),
+    if
+	Empty ->
+	    {reply, "Default message", Queue};
+	true ->
+	    {reply, queue:get(Queue), Queue}
+    end.
 
-handle_cast({post_message, Message}, Queue) when queue:is_empty(Queue) ->
-    {ok, TRef} = timer:apply_interval(10000, queueserver, dequeue, []),
-    put(timer, TRef),
-    {noreply, in(Message, Queue)};
 handle_cast({post_message, Message}, Queue) ->
-    {noreply, in(Message, Queue)};
-handle_cast(dequeue, Queue) when queue:is_empty(drop(Queue))->
-    timer:cancel(get(timer)),
-    {noreply, drop(Queue)};
-handle_cast(dequeue, Queue)->
-    {noreply, drop(Queue)};
+    Empty = queue:is_empty(Queue),
+    if
+	Empty ->
+	    {ok, TRef} = timer:apply_interval(10000, queueserver, dequeue, []),
+	    put(timer, TRef);
+	true ->
+	    ok
+    end,
+    {noreply, queue:in(Message, Queue)};
+handle_cast(dequeue, Queue) ->
+    Empty = queue:is_empty(queue:drop(Queue)),
+    if
+	Empty ->
+	    timer:cancel(get(timer));
+	true ->
+	    ok
+    end,
+    {noreply, queue:drop(Queue)};
 handle_cast(stop, Queue) ->
     {stop, "'stop' was cast", Queue}.
 
