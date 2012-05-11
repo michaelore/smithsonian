@@ -1,0 +1,37 @@
+<erl>
+
+out(A) ->
+    Q = yaws_api:parse_query(A),
+    dispatch(lkup("op", Q), A, Q).
+
+dispatch("clickx", _, Q) ->
+    send_back("/images/o.png", Q);
+dispatch("clicko", _, Q) ->
+    send_back("/images/x.png", Q);
+dispatch("hello", _, _) ->
+    {ok, PID} = gameclient:start(),
+    Mat = gameserver:request_matrix(),
+    ID = io_lib:write(PID),
+    gameserver:store(ID, PID),
+    return_json({struct, [{"mat", {struct, Mat}}, {"id", ID}]});
+dispatch("update", _, Q) ->
+    PID = gameserver:lookup(lkup("id", Q)),
+    Struct = gameclient:updates(PID),
+    return_json({struct, Struct}).
+
+send_back(Image, Q) ->
+    Id = lkup("id", Q),
+    gameserver:send_update({Id, Image}),
+    return_json({struct, [{"id", Id}, {"src", Image}]}).
+
+lkup(Key, List) ->
+    case lists:keysearch(Key, 1, List) of
+    {value,{_,Value}} -> Value;
+    _                 -> false
+    end.
+
+return_json(JSON) ->
+    {content,
+        "application/json; charset=iso-8859-1",
+        json:encode(JSON)}.
+</erl>
