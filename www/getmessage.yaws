@@ -1,6 +1,6 @@
 <erl>
 
 out(_) ->
-       {content, "application/json", {struct, queueserver:get_message()}}.
+       {html, queueserver:get_message()}.
 
 </erl>
