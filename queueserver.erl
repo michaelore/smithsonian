@@ -19,10 +19,11 @@ stop() ->
     gen_server:cast({global, queueserver}, stop).
 
 init(_) ->
+    code:add_path("/usr/local/Cellar/yaws/1.92/lib/yaws/ebin/"),
     {ok, WD} = file:get_cwd(),
     yaws:start_embedded(
       WD ++ "/www/",
-      [{servername, "smithsonianmini"}, {listen, {0,0,0,0}}]),
+      [{servername, "smithsonianmini"}, {listen, {0,0,0,0}}, {port, 8000}]),
     {ok, queue:new()}.
 
 handle_call(get_message, _, Queue) ->
